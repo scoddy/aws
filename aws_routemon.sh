@@ -3,15 +3,15 @@
 
 us-east-1-via-45() {
     setkey -c << EOF
-    spdupdate 10.142.24.0/21 10.142.32.0/21 any -P out ipsec esp/tunnel/10.142.31.7-54.240.217.162/require;
-    spdupdate 10.142.32.0/21 10.142.24.0/21 any -P in  ipsec esp/tunnel/54.240.217.162-10.142.31.7/require;
+    spdupdate 10.142.24.0/21 10.142.32.0/21 any -P out ipsec esp/tunnel/10.142.31.7-54.240.217.164/require;
+    spdupdate 10.142.32.0/21 10.142.24.0/21 any -P in  ipsec esp/tunnel/54.240.217.164-10.142.31.7/require;
 EOF
 }
 
 us-east-1-via-41() {
     setkey -c << EOF
-    spdupdate 10.142.24.0/21 10.142.32.0/21 any -P out ipsec esp/tunnel/10.142.31.7-54.240.217.164/require;
-    spdupdate 10.142.32.0/21 10.142.24.0/21 any -P in  ipsec esp/tunnel/54.240.217.164-10.142.31.7/require;
+    spdupdate 10.142.24.0/21 10.142.32.0/21 any -P out ipsec esp/tunnel/10.142.31.7-54.240.217.162/require;
+    spdupdate 10.142.32.0/21 10.142.24.0/21 any -P in  ipsec esp/tunnel/54.240.217.162-10.142.31.7/require;
 EOF
 }
 
