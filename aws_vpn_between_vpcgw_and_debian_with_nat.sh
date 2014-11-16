@@ -2,18 +2,7 @@
 #
 # Setup VPN between Debian Linux and VPC G/W.
 #   How to use : ./this_script.sh Generic.txt
-#
-# For connecting IPsec VPN, you need to allow these connections.
-# If VPN has global address, you change FORWARD to OUTPUT.
-#
-#   ex) iptables -A FORWARD -p udp --dport 500 -j ACCEPT
-#       iptables -A FORWARD -p tcp --dport 500 -j ACCEPT
-#       iptables -A FORWARD -p esp -j ACCEPT
-#
-# Change to suit your environment iptables setting.
-#
-# After executing on VPN, set client routing.
-#
+# Required packages: racoon ipsec-tools quagga
 
 PATH=/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
@@ -41,7 +30,7 @@ HOSTNAME=`hostname`
 INTERFACE="eth0"
 
 VPC_SUBNET="10.142.32.0/21"
-QUAGGA_PASSWORD="QuaggaPassword"
+QUAGGA_PASSWORD="SetSecurePassword"
 
 CUSTOMER_SUBNET=`LANG=C ip addr show dev $INTERFACE \
               | grep -m1 "inet " | sed -e 's/^.*inet \([\.0-9\/]\+\) .*/\1/g'`
@@ -87,7 +76,7 @@ done
 # Package
 #
 
-apt-get -y install racoon ipsec-tools quagga
+#apt-get -y install racoon ipsec-tools quagga
 
 #########
 #
@@ -111,27 +100,13 @@ EOT
 
 service procps restart
 
-#########
-#
-# iptables
-#
-#cat << EOT > /etc/iptables/conf.d/aws-vpc
-##!/bin/bash
-
-## AWS VPC
-#iptables -t nat -A POSTROUTING -d $VPC_SUBNET -j MASQUERADE
-#iptables -A FORWARD            -d $VPC_SUBNET -j ACCEPT
-#EOT
-
-#service iptables start
-
 #
 # Create Config File
 #
 
 ## Pre-Shared Key ##
 
-cat << EOT > /etc/racoon/aws-vpc.txt
+cat << EOT > /etc/racoon/aws-vpc-psk.txt
 $T1_OUT_VPC_GW $T1_PSK
 $T2_OUT_VPC_GW $T2_PSK
 EOT
@@ -146,7 +121,7 @@ mkdir /var/log/racoon
 
 cat << EOT > /etc/racoon/racoon.conf
 log notify;
-path pre_shared_key "/etc/racoon/aws-vpc.txt";
+path pre_shared_key "/etc/racoon/aws-vpc-psk.txt";
 
 remote $T1_OUT_VPC_GW {
 	exchange_mode main;
@@ -207,15 +182,15 @@ spdflush;
 spdadd $T1_IN_CUSTOMER_GW $T1_IN_VPC_GW any -P out ipsec esp/tunnel/$CUSTOMER_ADDR-$T1_OUT_VPC_GW/require;
 spdadd $T1_IN_VPC_GW $T1_IN_CUSTOMER_GW any -P in  ipsec esp/tunnel/$T1_OUT_VPC_GW-$CUSTOMER_ADDR/require;
 
-# Tunnel1 VPC right
-spdadd $T1_IN_CUSTOMER_GW $VPC_SUBNET   any -P out ipsec esp/tunnel/$CUSTOMER_ADDR-$T1_OUT_VPC_GW/require;
-spdadd $VPC_SUBNET $T1_IN_CUSTOMER_GW   any -P in  ipsec esp/tunnel/$T1_OUT_VPC_GW-$CUSTOMER_ADDR/require;
+# Tunnel1 VPC right (debug only)
+#spdadd $T1_IN_CUSTOMER_GW $VPC_SUBNET   any -P out ipsec esp/tunnel/$CUSTOMER_ADDR-$T1_OUT_VPC_GW/require;
+#spdadd $VPC_SUBNET $T1_IN_CUSTOMER_GW   any -P in  ipsec esp/tunnel/$T1_OUT_VPC_GW-$CUSTOMER_ADDR/require;
 
 # Tunnel2 Transfer Net
 spdadd $T2_IN_CUSTOMER_GW $T2_IN_VPC_GW any -P out ipsec esp/tunnel/$CUSTOMER_ADDR-$T2_OUT_VPC_GW/require;
 spdadd $T2_IN_VPC_GW $T2_IN_CUSTOMER_GW any -P in  ipsec esp/tunnel/$T2_OUT_VPC_GW-$CUSTOMER_ADDR/require;
 
-# Tunnel2 VPC right
+# Tunnel2 VPC right (debug only)
 spdadd $T2_IN_CUSTOMER_GW $VPC_SUBNET   any -P out ipsec esp/tunnel/$CUSTOMER_ADDR-$T2_OUT_VPC_GW/require;
 spdadd $VPC_SUBNET $T2_IN_CUSTOMER_GW   any -P in  ipsec esp/tunnel/$T2_OUT_VPC_GW-$CUSTOMER_ADDR/require;
 EOT
