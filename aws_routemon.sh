@@ -1,18 +1,28 @@
 #!/bin/bash
 # Monitors route changes and sets the correct SA via setkey
 
-us-east-1-via-45() {
-    setkey -c << EOF
-    spdupdate 10.142.24.0/21 10.142.32.0/21 any -P out ipsec esp/tunnel/10.142.31.7-54.240.217.164/require;
-    spdupdate 10.142.32.0/21 10.142.24.0/21 any -P in  ipsec esp/tunnel/54.240.217.164-10.142.31.7/require;
+us-east-1-via-41() {
+#service setkey restart
+setkey -c << EOF
+    spddelete 10.142.25.0/24 10.142.32.0/21 any -P out;
+    spddelete 10.142.32.0/21 10.142.25.0/24 any -P in ;
+    spdupdate 10.142.25.0/24 10.142.32.0/21 any -P out ipsec esp/tunnel/10.142.31.191-54.240.217.162/require;
+    spdupdate 10.142.32.0/21 10.142.25.0/24 any -P in  ipsec esp/tunnel/54.240.217.162-10.142.31.191/require;
 EOF
+
+logger "aws-routemon: ran us-east-1-via-41"
 }
 
-us-east-1-via-41() {
-    setkey -c << EOF
-    spdupdate 10.142.24.0/21 10.142.32.0/21 any -P out ipsec esp/tunnel/10.142.31.7-54.240.217.162/require;
-    spdupdate 10.142.32.0/21 10.142.24.0/21 any -P in  ipsec esp/tunnel/54.240.217.162-10.142.31.7/require;
+us-east-1-via-45() {
+#service setkey restart
+setkey -c << EOF
+    spddelete 10.142.25.0/24 10.142.32.0/21 any -P out;
+    spddelete 10.142.32.0/21 10.142.25.0/24 any -P in ;
+    spdupdate 10.142.25.0/24 10.142.32.0/21 any -P out ipsec esp/tunnel/10.142.31.191-54.240.217.164/require;
+    spdupdate 10.142.32.0/21 10.142.25.0/24 any -P in  ipsec esp/tunnel/54.240.217.164-10.142.31.191/require;
 EOF
+
+logger "aws-routemon: ran us-east-1-via-45"
 }
 
 declare -a actions
@@ -40,8 +50,10 @@ while :; do
 
                 if [ "$gw" = "$gw1" ]; then
                     $cmd1
+		 logger "aws-routemon: calling $cmd1"
                 elif [ "$gw" = "$gw2" ]; then
                     $cmd2
+		 logger "aws-routemon: calling $cmd2"
                 else
                     echo "unknown gw"
                 fi

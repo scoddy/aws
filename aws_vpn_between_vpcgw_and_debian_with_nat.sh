@@ -98,7 +98,6 @@ net.ipv4.conf.eth0.accept_redirects	= 0
 net.ipv4.conf.lo.accept_redirects	= 0
 EOT
 
-sysctl -p --system
 service procps restart
 
 #
@@ -192,8 +191,8 @@ spdadd $T2_IN_CUSTOMER_GW $T2_IN_VPC_GW any -P out ipsec esp/tunnel/$CUSTOMER_AD
 spdadd $T2_IN_VPC_GW $T2_IN_CUSTOMER_GW any -P in  ipsec esp/tunnel/$T2_OUT_VPC_GW-$CUSTOMER_ADDR/require;
 
 # Tunnel2 VPC right (debug only)
-#spdadd $T2_IN_CUSTOMER_GW $VPC_SUBNET   any -P out ipsec esp/tunnel/$CUSTOMER_ADDR-$T2_OUT_VPC_GW/require;
-#spdadd $VPC_SUBNET $T2_IN_CUSTOMER_GW   any -P in  ipsec esp/tunnel/$T2_OUT_VPC_GW-$CUSTOMER_ADDR/require;
+spdadd $T2_IN_CUSTOMER_GW $VPC_SUBNET   any -P out ipsec esp/tunnel/$CUSTOMER_ADDR-$T2_OUT_VPC_GW/require;
+spdadd $VPC_SUBNET $T2_IN_CUSTOMER_GW   any -P in  ipsec esp/tunnel/$T2_OUT_VPC_GW-$CUSTOMER_ADDR/require;
 EOT
 
 #
